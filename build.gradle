@@ -77,13 +77,7 @@ task vendor {
     doLast {
         String vendorPathPrefix = "vendor/jar-dependencies"
         configurations.runtime.allDependencies.each { dep ->
-//        logger.error(dep.toString())
-//        configurations.runtime.filter{ it.absolutePath.matches("${dep.group}/${dep.name}/${dep.version}/*.jar")}.each { aa -> logger.error(aa.toString)}
             File f = configurations.runtime.filter {
-//                logger.error(it.absolutePath)
-//                logger.error(it.absolutePath.contains("${dep.group}/${dep.name}/${dep.version}")?"true":"fasle")
-//                logger.error(it.absolutePath.matches(".*/${dep.group}/${dep.name}/${dep.version}/.*/.*jar")?"true":"fasle")
-//                it.absolutePath.matches(".*/${dep.group}/${dep.name}/${dep.version}/.*/.*jar") 
                 it.absolutePath.contains("${dep.group}/${dep.name}/${dep.version}") 
             }.singleFile
             String groupPath = dep.group.replaceAll('\\.', '/')
