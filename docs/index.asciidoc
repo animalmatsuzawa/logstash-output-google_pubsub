@@ -64,6 +64,23 @@ output {
 }
 ------------------------------------------------------------------------------
 
+===== PubSubLite
+
+[source,ruby]
+------------------------------------------------------------------------------
+output {
+  google_pubsublite {
+    # Required attributes
+    project_id => "my_project"
+    topic => "my_topic"
+    cloud_zone => "asia-northeast1-b"
+
+    # Optional if you're using app default credentials
+    json_key_file => "service_account_key.json"
+  }
+}
+------------------------------------------------------------------------------
+
 
 ===== High Volume
 
@@ -141,14 +158,15 @@ This plugin supports the following configuration options plus the <<plugins-{typ
 
 [cols="<,<,<",options="header",]
 |=======================================================================
-|Setting |Input type|Required
-| <<plugins-{type}s-{plugin}-project_id>> |<<string,string>>|Yes
-| <<plugins-{type}s-{plugin}-topic>> |<<string,string>>|Yes
-| <<plugins-{type}s-{plugin}-json_key_file>> |<<path,path>>|No
-| <<plugins-{type}s-{plugin}-delay_threshold_secs>> |<<number,number>>|No
-| <<plugins-{type}s-{plugin}-message_count_threshold>> |<<number,number>>|No
-| <<plugins-{type}s-{plugin}-request_byte_threshold>> |<<bytes,bytes>>|No
-| <<plugins-{type}s-{plugin}-attributes>> |<<hash,hash>>|No
+|Setting |Input type|Required||
+| <<plugins-{type}s-{plugin}-project_id>> |<<string,string>>|Yes|
+| <<plugins-{type}s-{plugin}-topic>> |<<string,string>>|Yes|
+| <<plugins-{type}s-{plugin}-cloud_zone>> |<<string,string>>|Yes|Only PubSubLite
+| <<plugins-{type}s-{plugin}-json_key_file>> |<<path,path>>|No|
+| <<plugins-{type}s-{plugin}-delay_threshold_secs>> |<<number,number>>|No|
+| <<plugins-{type}s-{plugin}-message_count_threshold>> |<<number,number>>|No|
+| <<plugins-{type}s-{plugin}-request_byte_threshold>> |<<bytes,bytes>>|No|
+| <<plugins-{type}s-{plugin}-attributes>> |<<hash,hash>>|No|
 |=======================================================================
 
 Also see <<plugins-{type}s-{plugin}-common-options>> for a list of options supported by all
@@ -169,6 +187,15 @@ Google Cloud Project ID (name, not number).
   * There is no default value for this setting.
 
 Google Cloud Pub/Sub Topic. You must create the topic manually before running this plugin.
+
+[id="plugins-{type}s-{plugin}-cloud_zone"]
+===== `cloud_zone`
+
+  * Value type is <<string,string>>
+  * There is no default value for this setting.
+  * ex. "asia-northeast1-b"
+
+Google Cloud Pub/Sub Lite Cloud Zone. ( Only Pub/Sub Lite)
 
 [id="plugins-{type}s-{plugin}-json_key_file"]
 ===== `json_key_file`

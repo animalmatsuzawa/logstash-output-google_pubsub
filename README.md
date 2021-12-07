@@ -2,7 +2,7 @@
 [![Travis Build Status](https://travis-ci.com/logstash-plugins/logstash-output-google_pubsub.svg)](https://travis-ci.com/logstash-plugins/logstash-output-google_pubsub)
 
 
-# Logstash Output Google Pubsub
+# Logstash Output Google Pubsub & PubSubLite
 
 A Logstash plugin to upload log events to [Google Cloud Pub/Sub](https://cloud.google.com/pubsub/).
 Events are batched and uploaded in the background for the sake of efficiency.

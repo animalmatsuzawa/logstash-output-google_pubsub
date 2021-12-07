@@ -1,18 +1,21 @@
 require 'logstash/outputs/base'
 require 'logstash/namespace'
-require 'logstash/outputs/pubsub/client'
+require 'logstash/outputs/pubsublite/client'
 
 # A Logstash plugin to upload log events to https://cloud.google.com/pubsub/[Google Cloud Pubsub].
-class LogStash::Outputs::GooglePubsub < LogStash::Outputs::Base
-  config_name 'google_pubsub'
+class LogStash::Outputs::GooglePubsubLite < LogStash::Outputs::Base
+  config_name 'google_pubsublite'
 
   concurrency :shared
 
   # Google Cloud Project ID (name, not number)
   config :project_id, validate: :string, required: true
 
-  # Google Cloud Pub/Sub Topic, expected to exist before the plugin starts
+  # Google Cloud Pub/Sub Lite Topic, expected to exist before the plugin starts
   config :topic, validate: :string, required: true
+
+  # Google Cloud Pub/Sub Lite cloudRegion, expected to exist before the plugin starts
+  config :cloud_zone, validate: :string, required: true
 
   # A full path to the JSON key file, if empty it's assumed Application Default Credentials
   # will be used.
@@ -37,15 +40,15 @@ class LogStash::Outputs::GooglePubsub < LogStash::Outputs::Base
   default :codec, 'json'
 
   def register
-    @logger.info("Registering Google PubSub Output plugin: #{full_topic}")
+    @logger.info("Registering Google PubSubLite Output plugin: #{full_topic}")
 
-    batch_settings = LogStash::Outputs::Pubsub::Client.build_batch_settings(
+    batch_settings = LogStash::Outputs::PubsubLite::Client.build_batch_settings(
       @request_byte_threshold,
       @delay_threshold_secs,
       @message_count_threshold
     )
 
-    @pubsub = LogStash::Outputs::Pubsub::Client.new(
+    @pubsub = LogStash::Outputs::PubsubLite::Client.new(
       @json_key_file,
       full_topic,
       batch_settings,
@@ -75,6 +78,6 @@ class LogStash::Outputs::GooglePubsub < LogStash::Outputs::Base
   end
 
   def full_topic
-    "projects/#{@project_id}/topics/#{@topic}"
+    "projects/#{@project_id}/locations/#{@cloud_zone}/topics/#{@topic}"
   end
 end

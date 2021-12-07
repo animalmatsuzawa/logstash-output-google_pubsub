@@ -4,10 +4,10 @@ require 'logstash/outputs/pubsub/message_future_callback'
 
 module LogStash
   module Outputs
-    module Pubsub
+    module PubsubLite
       # A wrapper around PubSub's Java API.
       class Client
-        def initialize(json_key_file, topic_name, batch_settings, logger, client = nil)
+        def initialize(json_key_file, topic_name, batch_settings, logger, client=nil)
           @logger = logger
 
           @pubsub = client || initialize_google_client(json_key_file, topic_name, batch_settings)
@@ -16,10 +16,10 @@ module LogStash
         # Creates a Java BatchSettings object given user-defined thresholds.
         def self.build_batch_settings(byte_threshold, delay_threshold_secs, count_threshold)
           com.google.api.gax.batching.BatchingSettings.newBuilder
-            .setElementCountThreshold(count_threshold)
-            .setRequestByteThreshold(byte_threshold)
-            .setDelayThreshold(org.threeten.bp.Duration.ofSeconds(delay_threshold_secs))
-            .build
+              .setElementCountThreshold(count_threshold)
+              .setRequestByteThreshold(byte_threshold)
+              .setDelayThreshold(org.threeten.bp.Duration.ofSeconds(delay_threshold_secs))
+              .build
         end
 
         # Creates a Java PubsubMessage given the message body as a string and a
@@ -52,7 +52,6 @@ module LogStash
 
           if use_default_credential? json_key_file
             credentials = com.google.cloud.pubsub.v1.TopicAdminSettings.defaultCredentialsProviderBuilder.build
-            @logger.info("Credentials:"+credentials.toString)
           else
             raise_key_file_error(json_key_file)
 
@@ -61,17 +60,22 @@ module LogStash
             credentials = com.google.api.gax.core.FixedCredentialsProvider.create(sac)
           end
 
-          com.google.cloud.pubsub.v1.Publisher.newBuilder(topic_name)
-             .setCredentialsProvider(credentials)
-             .setHeaderProvider(construct_headers)
-             .setBatchingSettings(batch_settings)
-             .build
+          publisher_settings = com.google.cloud.pubsublite.cloudpubsub.PublisherSettings.newBuilder
+            .setTopicPath(com.google.cloud.pubsublite.TopicPath.parse(topic_name))
+            .setCredentialsProvider(credentials)
+            .setBatchingSettings(batch_settings)
+            .build
+
+          publisher = com.google.cloud.pubsublite.cloudpubsub.Publisher.create(publisher_settings)
+          publisher.startAsync.awaitRunning
+
+          publisher
         end
 
         # Schedules immediate publishing of any outstanding messages and waits
         # until all are processed.
         def shutdown
-          @pubsub.shutdown
+          @pubsub.stopAsync.awaitTerminated
         end
 
         private
@@ -79,11 +83,15 @@ module LogStash
         def setup_callback(message_string, message_id)
           callback = LogStash::Outputs::Pubsub::MessageFutureCallback.new message_string, @logger
 
-          com.google.api.core.ApiFutures.addCallback(message_id, callback)
+          com.google.api.core.ApiFutures.addCallback(
+            message_id,
+            callback,
+            com.google.common.util.concurrent.MoreExecutors.directExecutor
+          )
         end
 
         def construct_headers
-          gem_name = 'logstash-output-google_pubsub'
+          gem_name = 'logstash-output-google_pubsublite'
           user_agent = "Elastic/#{gem_name}"
 
           com.google.api.gax.rpc.FixedHeaderProvider.create('User-Agent', user_agent)
